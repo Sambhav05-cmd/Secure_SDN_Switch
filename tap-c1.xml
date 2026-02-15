@@ -1,0 +1,7 @@
+cat > /tmp/tap-c1.xml <<'EOF'
+<interface type='ethernet'>
+  <target dev='tap-c1'/>
+  <model type='virtio'/>
+</interface>
+EOF
+

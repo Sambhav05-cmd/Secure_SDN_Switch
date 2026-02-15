@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -e
+
+BR=Control-Bridge
+
+VLAN100=100
+VLAN200=200
+
+IP100=10.100.0.2/24
+IP200=10.200.0.2/24
+
+# Create bridge if missing
+if ! ip link show "$BR" &>/dev/null; then
+    ip link add name "$BR" type bridge vlan_filtering 1
+fi
+
+# Bring bridge up
+ip link set "$BR" up
+
+# Remove default VLAN 1 from bridge CPU port
+bridge vlan del dev "$BR" self vid 1 2>/dev/null || true
+
+# Allow VLANs on bridge CPU port (host participation)
+bridge vlan add dev "$BR" self vid "$VLAN100" pvid untagged
+bridge vlan add dev "$BR" self vid "$VLAN200"
+
+sudo ip link add link Control-Bridge name cb100 type vlan id 100
+sudo ip link add link Control-Bridge name cb200 type vlan id 200
+
+sudo ip addr add 10.100.0.2/24 dev cb100
+sudo ip addr add 10.200.0.2/24 dev cb200
+
+sudo ip link set cb100 up
+sudo ip link set cb200 up
+sudo ip link set Control-Bridge up
+
+ip link add veth-host type veth peer name veth-host-br
+ip link set veth-host-br master br-wire
+ip link set veth-host-br up
+ip link set veth-host up
+
+ip addr add 10.0.0.3/24 dev veth-host
+ip link set veth-host up
+
+
+echo "Control-Bridge (internal-only) configured"
+

@@ -1,0 +1,4 @@
+<interface type='ethernet'>
+  <model type='virtio'/>
+</interface>
+
